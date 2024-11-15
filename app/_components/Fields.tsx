@@ -2,66 +2,56 @@
 
 import { Input } from "@/components/ui/input";
 import { useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PlusCircle, Trash2 } from "lucide-react";
 
-import FieldItem from "./FieldItem";
-import Checkbox from "./checkbox/Checkbox";
-
-interface Fields {
+interface FieldsProps {
   id: number;
-  name: string;
-  type: string;
+  onDelete: (id: number) => void;
 }
 
-export default function Fields() {
-  const [fields, setFields] = useState<Fields[]>([
-    { id: 1, name: "", type: "String" },
+export default function Fields({ onDelete, id }: FieldsProps) {
+  const [modelName, setModelName] = useState("");
+  const [fields, setFields] = useState([
+    { id: 1, name: "", type: "String", defaultValue: "" },
   ]);
-  const [modelName, setModelName] = useState<string>("");
-  const [generatedSchema, setGeneratedSchema] = useState<string>("");
 
-  // const handleFieldChange = useCallback(
-  //   (index, event) => {
-  //     const updatedFields = [...fields];
-  //     updatedFields[index][event.target.name] = event.target.value;
-  //     setFields(updatedFields);
-  //   },
-  //   [fields]
-  // );
+  const handleFieldChange = useCallback(
+    (index, event) => {
+      const updatedFields = [...fields];
+      updatedFields[index][event.target.name] = event.target.value;
+      setFields(updatedFields);
+    },
+    [fields]
+  );
+
+  const handleTypeChange = (index, type) => {
+    const updatedFields = [...fields];
+    updatedFields[index].type = type;
+    setFields(updatedFields);
+  };
 
   const addField = useCallback(() => {
-    setFields([...fields, { id: fields.length + 1, name: "", type: "String" }]);
+    setFields([
+      ...fields,
+      { id: fields.length + 1, name: "", type: "String", defaultValue: "" },
+    ]);
   }, [fields]);
 
   const removeField = (id: number) => {
     setFields(fields.filter((field) => field.id !== id));
   };
 
-  const generateSchema = useCallback(() => {
-    const schema =
-      `model ${modelName} {\n` +
-      fields.map((field) => `  ${field.name} ${field.type}`).join("\n") +
-      "\n}";
-    setGeneratedSchema(schema);
-  }, [modelName, fields]);
-
-  const fieldOptions = [
-    {
-      name: "createAt/updateAt",
-      id: "createRelation",
-      label: "Create Relation",
-    },
-    {
-      name: "createAt/updateAt",
-      id: "CreateAt/UpdatedAt",
-      label: "CreateAt/UpdatedAt",
-    },
-  ];
-
   return (
-    <div className="max-w-screen-lg mx-auto border p-5 rounded-md mt-5">
+    <div className="w-[90vw] max-w-[400px] mx-auto border p-3 rounded-md">
       <form className="flex flex-col">
+        {/* Model Name Input */}
         <div>
           <label className="font-semibold">Model Name</label>
           <Input
@@ -72,48 +62,120 @@ export default function Fields() {
           />
         </div>
 
-        <div className="flex flex-col gap-4 mt-4">
-          {fieldOptions.map((checkbox) => (
-            <Checkbox
-              key={checkbox.id}
-              name={checkbox.name}
-              id={checkbox.id}
-              label={checkbox.label}
+        <div className="flex flex-col gap-2 mt-4">
+          <div>
+            <input
+              type="checkbox"
+              name="create relation"
+              id="createRelation"
+              className="mr-3"
             />
-          ))}
+            <label>Create Relation</label>
+          </div>
+          <div>
+            <input
+              type="checkbox"
+              name="createAt/updateAt"
+              id="dateNow"
+              className="mr-3"
+            />
+            <label>CreateAt/UpdatedAt</label>
+          </div>
         </div>
 
         <h2 className="font-bold my-4">Fields</h2>
 
+        {/* Render each field */}
         {fields.map((field, index) => (
-          <FieldItem key={field.id} field={field} removeField={removeField} />
+          <div key={field.id} className="border p-2 rounded-md mb-4">
+            <div className="flex flex-col gap-3 md:flex-row justify-between mb-4">
+              <Input
+                type="text"
+                name="name"
+                value={field.name}
+                onChange={(e) => handleFieldChange(index, e)}
+                placeholder="Field Name"
+                className=""
+              />
+              {/* Field Type Selector */}
+              <Select onValueChange={(value) => handleTypeChange(index, value)}>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder={field.type} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UUID">UUID</SelectItem>
+                  <SelectItem value="String">String</SelectItem>
+                  <SelectItem value="Int">Int</SelectItem>
+                  <SelectItem value="Boolean">Boolean</SelectItem>
+                  <SelectItem value="DateTime">DateTime</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Field Attributes */}
+            <div className="flex flex-wrap gap-3 mb-4">
+              {["Primary Key", "Unique", "Required"].map((option, index) => (
+                <div className="flex flex-wrap" key={index}>
+                  <input
+                    type="checkbox"
+                    name={option}
+                    id={option.toLowerCase().replace(" ", "")}
+                  />
+                  <label className="ml-3">{option}</label>
+                </div>
+              ))}
+            </div>
+
+            {/* Default Value and Delete field Button  */}
+            <div className="flex gap-10 md:justify-between">
+              <Input
+                type="text"
+                name="defaultValue"
+                value={field.defaultValue}
+                onChange={(e) => handleFieldChange(index, e)}
+                className="max-w-[250px]"
+                placeholder="Default value"
+              />
+              <button type="button" onClick={() => removeField(field.id)}>
+                <Trash2
+                  size={30}
+                  className="text-black p-1 rounded-sm hover:bg-red-500 hover:text-white transition-all"
+                />
+              </button>
+            </div>
+          </div>
         ))}
 
-        <Button type="button" onClick={addField} className="font-semibold mt-4">
-          Add field
-        </Button>
-
-        <div className="flex mt-4">
-          <button className="flex items-center gap-2 rounded-md border p-1 font-semibold hover:bg-red-500 transition-all hover:text-white">
-            <Trash2
-              size={30}
+        {/* Add Field and Delete Model Buttons */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-2">
+          <div className="w-full pr-7 flex justify-center items-center rounded-md border p-1 bg-emerald-600 text-white transition-all">
+            <button
               type="button"
-              className="bg-red-500 text-white p-1 rounded-sm"
-            />
-            Delete model
-          </button>
-        </div>
-
-        <button type="button" onClick={generateSchema} className="mt-4">
-          Generate schema
-        </button>
-
-        {generatedSchema && (
-          <div className="mt-4">
-            <h3>Generated Prisma Schema</h3>
-            <pre>{generatedSchema}</pre>
+              onClick={addField}
+              className="flex items-center gap-2 font-semibold"
+            >
+              <PlusCircle
+                size={30}
+                className="bg-emerald-600 text-white p-1 rounded-sm"
+              />
+              Add Field
+            </button>
           </div>
-        )}
+
+          <div className="w-full flex justify-center items-center rounded-md border p-1 bg-red-500 text-white transition-all">
+            <button
+              type="button"
+              onClick={() => onDelete(id)}
+              className="flex items-center gap-2 font-semibold"
+            >
+              <Trash2
+                size={30}
+                className="bg-red-500 text-white p-1 rounded-sm"
+              />
+              Delete model
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   );
