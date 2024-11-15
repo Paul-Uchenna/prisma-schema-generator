@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { PlusCircle, Trash2 } from "lucide-react";
+import AddDelete from "./AddDelete";
 
 interface FieldsProps {
   id: number;
@@ -18,8 +19,10 @@ interface FieldsProps {
 
 export default function Fields({ onDelete, id }: FieldsProps) {
   const [modelName, setModelName] = useState("");
+  const [createRelationChecked, setCreateRelationChecked] = useState(false);
+  const [create_UpdateChecked, setCreate_UpdateChecked] = useState(false);
   const [fields, setFields] = useState([
-    { id: 1, name: "", type: "String", defaultValue: "" },
+    { id: 1, name: "", type: "String", attribut: {}, defaultValue: "" },
   ]);
 
   const handleFieldChange = useCallback(
@@ -69,6 +72,8 @@ export default function Fields({ onDelete, id }: FieldsProps) {
               name="create relation"
               id="createRelation"
               className="mr-3"
+              checked={createRelationChecked}
+              onChange={(e) => setCreateRelationChecked(e.target.checked)}
             />
             <label>Create Relation</label>
           </div>
@@ -78,12 +83,42 @@ export default function Fields({ onDelete, id }: FieldsProps) {
               name="createAt/updateAt"
               id="dateNow"
               className="mr-3"
+              checked={create_UpdateChecked}
+              onChange={(e) => setCreate_UpdateChecked(e.target.checked)}
             />
             <label>CreateAt/UpdatedAt</label>
           </div>
         </div>
 
         <h2 className="font-bold my-4">Fields</h2>
+
+        {createRelationChecked && (
+          <div>
+            {" "}
+            <div className="flex flex-col gap-3 md:flex-row justify-between mb-4">
+              <Input
+                type="text"
+                name="name"
+                placeholder="Field Name"
+                className=""
+              />
+              {/* Field Type Selector */}
+              <Select>
+                <SelectTrigger className="w-[150px]">
+                  <SelectValue placeholder="DateTime" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="UUID">UUID</SelectItem>
+                  <SelectItem value="String">String</SelectItem>
+                  <SelectItem value="Int">Int</SelectItem>
+                  <SelectItem value="Boolean">Boolean</SelectItem>
+                  <SelectItem value="DateTime">DateTime</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        )}
+        {create_UpdateChecked && <div>Heelo</div>}
 
         {/* Render each field */}
         {fields.map((field, index) => (
@@ -113,7 +148,7 @@ export default function Fields({ onDelete, id }: FieldsProps) {
             </div>
 
             {/* Field Attributes */}
-            <div className="flex flex-wrap gap-3 mb-4">
+            <div className="flex flex-wrap justify-between gap-3 mb-4">
               {["Primary Key", "Unique", "Required"].map((option, index) => (
                 <div className="flex flex-wrap" key={index}>
                   <input
@@ -147,35 +182,8 @@ export default function Fields({ onDelete, id }: FieldsProps) {
         ))}
 
         {/* Add Field and Delete Model Buttons */}
-        <div className="flex flex-col md:flex-row items-center justify-between gap-2">
-          <div className="w-full pr-7 flex justify-center items-center rounded-md border p-1 bg-emerald-600 text-white transition-all">
-            <button
-              type="button"
-              onClick={addField}
-              className="flex items-center gap-2 font-semibold"
-            >
-              <PlusCircle
-                size={30}
-                className="bg-emerald-600 text-white p-1 rounded-sm"
-              />
-              Add Field
-            </button>
-          </div>
 
-          <div className="w-full flex justify-center items-center rounded-md border p-1 bg-red-500 text-white transition-all">
-            <button
-              type="button"
-              onClick={() => onDelete(id)}
-              className="flex items-center gap-2 font-semibold"
-            >
-              <Trash2
-                size={30}
-                className="bg-red-500 text-white p-1 rounded-sm"
-              />
-              Delete model
-            </button>
-          </div>
-        </div>
+        <AddDelete onAddField={addField} onDelete={onDelete} id={id} />
       </form>
     </div>
   );
